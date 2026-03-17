@@ -1,1 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEXUS WIN | Color Prediction</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8f9fa; /* Light background like the screenshot */
+            color: #333;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: #fff;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+            padding-bottom: 80px; /* Space for bottom nav */
+        }
+        .header-bg {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+        .tab-active {
+            background: #e0e7ff;
+            color: #2563eb;
+            font-weight: bold;
+            border-radius: 12px;
+        }
+        /* Custom Colors */
+        .bg-green-btn { background: #16a34a; color: white; box-shadow: 0 4px 0 #15803d; }
+        .bg-violet-btn { background: #9333ea; color: white; box-shadow: 0 4px 0 #7e22ce; }
+        .bg-red-btn { background: #ef4444; color: white; box-shadow: 0 4px 0 #b91c1c; }
+        .bg-big-btn { background: #f59e0b; color: white; box-shadow: 0 4px 0 #d97706; }
+        .bg-small-btn { background: #3b82f6; color: white; box-shadow: 0 4px 0 #1d4ed8; }
+        
+        .number-btn {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            color: #333;
+            font-weight: 800;
+            font-size: 1.2rem;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 0 #cbd5e1;
+        }
+        /* Dual color numbers (0 and 5) */
+        .num-0 { background: linear-gradient(to bottom right, #ef4444 50%, #9333ea 50%); color: white; border: none;}
+        .num-5 { background: linear-gradient(to bottom right, #16a34a 50%, #9333ea 50%); color: white; border: none;}
+        .num-red { background: #ef4444; color: white; border: none;}
+        .num-green { background: #16a34a; color: white; border: none;}
+
+        .timer-box {
+            background: #e0e7ff;
+            color: #2563eb;
+            font-family: monospace;
+            font-size: 1.5rem;
+            font-weight: 900;
+            padding: 4px 8px;
+            border-radius: 8px;
+            letter-spacing: 2px;
+        }
+
+        /* Loading overlay for when timer is <= 5 seconds */
+        .freeze-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(2px);
+            z-index: 50;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <div class="header-bg p-4 rounded-b-3xl shadow-md">
+        <div class="flex justify-between items-center mb-4">
+            <button><i class="fa-solid fa-chevron-left text-xl"></i></button>
+            <h1 class="text-xl font-black italic tracking-widest">NEXUS WIN</h1>
+            <button><i class="fa-solid fa-headset text-xl"></i></button>
+        </div>
+        
+        <div class="bg-white/20 p-4 rounded-2xl backdrop-blur-sm">
+            <p class="text-xs font-semibold text-white/80 mb-1">Total balance</p>
+            <div class="flex justify-between items-center">
+                <h2 class="text-3xl font-black">₹100.00 <i class="fa-solid fa-arrows-rotate text-sm cursor-pointer active:rotate-180 transition"></i></h2>
+                <button class="bg-white text-blue-600 px-4 py-2 rounded-full font-bold text-xs shadow-lg active:scale-95">Withdraw</button>
+            </div>
+            <div class="flex gap-4 mt-4">
+                <button class="flex-1 bg-blue-700/50 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-wallet"></i> Deposit</button>
+                <button class="flex-1 bg-blue-700/50 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-gem"></i> VIP</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex gap-2 p-4 overflow-x-auto hide-scrollbar">
+        <div class="px-4 py-3 tab-active text-center min-w-[80px]">
+            <i class="fa-regular fa-clock text-xl mb-1"></i>
+            <p class="text-[10px] uppercase">WinGo 30s</p>
+        </div>
+        <div class="px-4 py-3 bg-gray-100 rounded-xl text-gray-500 text-center min-w-[80px]">
+            <i class="fa-regular fa-clock text-xl mb-1"></i>
+            <p class="text-[10px] uppercase">WinGo 1M</p>
+        </div>
+        <div class="px-4 py-3 bg-gray-100 rounded-xl text-gray-500 text-center min-w-[80px]">
+            <i class="fa-regular fa-clock text-xl mb-1"></i>
+            <p class="text-[10px] uppercase">WinGo 3M</p>
+        </div>
+        <div class="px-4 py-3 bg-gray-100 rounded-xl text-gray-500 text-center min-w-[80px]">
+            <i class="fa-regular fa-clock text-xl mb-1"></i>
+            <p class="text-[10px] uppercase">WinGo 5M</p>
+        </div>
+    </div>
+
+    <div class="mx-4 bg-white border border-gray-200 p-4 rounded-2xl shadow-sm flex justify-between items-center mb-4">
+        <div>
+            <p class="text-xs text-gray-500 font-bold mb-1"><i class="fa-solid fa-book"></i> How to play</p>
+            <p class="text-sm font-bold text-gray-800">WinGo 30sec</p>
+            <p id="periodNumber" class="text-xs text-blue-600 font-bold mt-1">2026031710001</p>
+        </div>
+        <div class="text-right">
+            <p class="text-xs text-gray-500 font-bold mb-1">Time remaining</p>
+            <div class="timer-box" id="countdownTimer">00:30</div>
+        </div>
+    </div>
+
+    <div class="mx-4 bg-gray-50 p-4 rounded-2xl shadow-inner relative border border-gray-200">
+        
+        <div id="freezeOverlay" class="freeze-overlay rounded-2xl">
+            <h2 class="text-4xl font-black text-red-500 animate-pulse" id="freezeText">05</h2>
+        </div>
+
+        <div class="flex gap-3 mb-5">
+            <button onclick="placeBet('Green')" class="flex-1 bg-green-btn py-3 rounded-xl font-black text-sm active:translate-y-1">Green</button>
+            <button onclick="placeBet('Violet')" class="flex-1 bg-violet-btn py-3 rounded-xl font-black text-sm active:translate-y-1">Violet</button>
+            <button onclick="placeBet('Red')" class="flex-1 bg-red-btn py-3 rounded-xl font-black text-sm active:translate-y-1">Red</button>
+        </div>
+
+        <div class="grid grid-cols-5 gap-y-4 gap-x-2 justify-items-center mb-6">
+            <button onclick="placeBet('0')" class="number-btn num-0 active:translate-y-1">0</button>
+            <button onclick="placeBet('1')" class="number-btn num-green active:translate-y-1">1</button>
+            <button onclick="placeBet('2')" class="number-btn num-red active:translate-y-1">2</button>
+            <button onclick="placeBet('3')" class="number-btn num-green active:translate-y-1">3</button>
+            <button onclick="placeBet('4')" class="number-btn num-red active:translate-y-1">4</button>
+            <button onclick="placeBet('5')" class="number-btn num-5 active:translate-y-1">5</button>
+            <button onclick="placeBet('6')" class="number-btn num-red active:translate-y-1">6</button>
+            <button onclick="placeBet('7')" class="number-btn num-green active:translate-y-1">7</button>
+            <button onclick="placeBet('8')" class="number-btn num-red active:translate-y-1">8</button>
+            <button onclick="placeBet('9')" class="number-btn num-green active:translate-y-1">9</button>
+        </div>
+
+        <div class="flex justify-between items-center mb-4">
+            <button class="border border-blue-500 text-blue-500 px-4 py-1 rounded-full text-xs font-bold">Random</button>
+            <div class="flex gap-1">
+                <span class="bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs font-bold">X1</span>
+                <span class="bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs font-bold">X5</span>
+                <span class="bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs font-bold">X10</span>
+                <span class="bg-gray-200 text-gray-600 px-2 py-1 rounded text-xs font-bold">X20</span>
+            </div>
+        </div>
+
+        <div class="flex gap-2">
+            <button onclick="placeBet('Big')" class="flex-1 bg-big-btn py-3 rounded-xl font-black text-lg active:translate-y-1">Big</button>
+            <button onclick="placeBet('Small')" class="flex-1 bg-small-btn py-3 rounded-xl font-black text-lg active:translate-y-1">Small</button>
+        </div>
+    </div>
+
+    <div class="mt-6 mx-4">
+        <div class="flex justify-between border-b-2 border-blue-500 pb-2 mb-4">
+            <button class="text-blue-600 font-black text-sm">Game history</button>
+            <button class="text-gray-400 font-bold text-sm">Chart</button>
+            <button class="text-gray-400 font-bold text-sm">My bet</button>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="grid grid-cols-4 bg-gray-100 p-3 text-xs font-bold text-gray-500 text-center">
+                <div class="col-span-2 text-left pl-2">Period</div>
+                <div>Number</div>
+                <div>Result</div>
+            </div>
+            
+            <div id="historyList" class="divide-y divide-gray-100">
+                </div>
+        </div>
+    </div>
+
+    <footer class="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 flex justify-around items-center px-2 py-2 pb-safe max-w-[480px] mx-auto z-50">
+        <button class="flex flex-col items-center gap-1 w-16 text-blue-600">
+            <i class="fa-solid fa-house text-xl"></i><span class="text-[10px] font-bold">Home</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 w-16 text-gray-400">
+            <i class="fa-solid fa-gamepad text-xl"></i><span class="text-[10px] font-bold">Activity</span>
+        </button>
+        <div class="relative -top-5">
+            <button class="bg-blue-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-[0_5px_15px_rgba(37,99,235,0.4)] border-4 border-white">
+                <i class="fa-solid fa-gem text-2xl"></i>
+            </button>
+        </div>
+        <button class="flex flex-col items-center gap-1 w-16 text-gray-400">
+            <i class="fa-solid fa-share-nodes text-xl"></i><span class="text-[10px] font-bold">Promotion</span>
+        </button>
+        <button class="flex flex-col items-center gap-1 w-16 text-gray-400">
+            <i class="fa-solid fa-user text-xl"></i><span class="text-[10px] font-bold">Account</span>
+        </button>
+    </footer>
+
+</div>
+
+<div id="betPopup" class="fixed inset-0 z-[60000] bg-black/50 hidden items-end justify-center pb-0">
+    <div class="bg-white w-full max-w-[480px] rounded-t-3xl p-6 animate-[slideUp_0.3s_ease-out]">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-black text-gray-800" id="betPopupTitle">Bet Details</h3>
+            <button onclick="closeBetPopup()"><i class="fa-solid fa-xmark text-2xl text-gray-400"></i></button>
+        </div>
+        <p class="text-sm font-bold text-gray-500 mb-4">Balance: ₹100.00</p>
+        <div class="flex gap-2 mb-6">
+            <button class="flex-1 border-2 border-blue-500 text-blue-500 py-2 rounded-lg font-bold">₹10</button>
+            <button class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold">₹100</button>
+            <button class="flex-1 border border-gray-300 py-2 rounded-lg font-bold">₹1000</button>
+        </div>
+        <button onclick="confirmBet()" class="w-full bg-gradient-to-r from-blue-500 to-blue-700 text-white py-4 rounded-xl font-black text-lg shadow-lg">TOTAL BET ₹100</button>
+    </div>
+</div>
+
+<script>
+    // --- GAME LOGIC & VARIABLES ---
+    let currentPeriod = 2026031710001;
+    let timeLeft = 30; // 30 seconds game
+    let gameInterval;
+    
+    // GoaGames Standard Rules:
+    // Numbers 0-4 = Small, 5-9 = Big
+    // Green: 1, 3, 7, 9, 5(Half)
+    // Red: 2, 4, 6, 8, 0(Half)
+    // Violet: 0, 5
+    
+    const historyData = [
+        { period: 2026031710000, num: 4, size: 'Small', colors: ['red'] },
+        { period: 2026031709999, num: 2, size: 'Small', colors: ['red'] },
+        { period: 2026031709998, num: 0, size: 'Small', colors: ['red', 'violet'] },
+        { period: 2026031709997, num: 7, size: 'Big', colors: ['green'] },
+        { period: 2026031709996, num: 5, size: 'Big', colors: ['green', 'violet'] }
+    ];
+
+    // Initialize Game
+    window.onload = () => {
+        document.getElementById('periodNumber').innerText = currentPeriod;
+        renderHistory();
+        startTimer();
+    };
+
+    function startTimer() {
+        const timerDisplay = document.getElementById('countdownTimer');
+        const freezeOverlay = document.getElementById('freezeOverlay');
+        const freezeText = document.getElementById('freezeText');
+
+        gameInterval = setInterval(() => {
+            timeLeft--;
+            
+            // Format time as 00:XX
+            let displayTime = timeLeft < 10 ? "0" + timeLeft : timeLeft;
+            timerDisplay.innerText = "00:" + displayTime;
+
+            // Last 5 seconds -> Freeze Betting
+            if (timeLeft <= 5 && timeLeft > 0) {
+                freezeOverlay.style.display = 'flex';
+                freezeText.innerText = displayTime;
+            }
+
+            // Timer Hits 0 -> Generate Result
+            if (timeLeft <= 0) {
+                clearInterval(gameInterval);
+                generateResult();
+            }
+        }, 1000);
+    }
+
+    function generateResult() {
+        const freezeOverlay = document.getElementById('freezeOverlay');
+        freezeOverlay.style.display = 'flex';
+        document.getElementById('freezeText').innerText = "Calculating...";
+
+        setTimeout(() => {
+            // Generate Random Number 0-9
+            const randomNum = Math.floor(Math.random() * 10);
+            
+            // Determine Big/Small and Colors
+            let size = randomNum >= 5 ? 'Big' : 'Small';
+            let colors = [];
+            
+            if (randomNum === 0) colors = ['red', 'violet'];
+            else if (randomNum === 5) colors = ['green', 'violet'];
+            else if (randomNum % 2 === 0) colors = ['red']; // 2,4,6,8
+            else colors = ['green']; // 1,3,7,9
+
+            // Add to history (at the beginning)
+            historyData.unshift({
+                period: currentPeriod,
+                num: randomNum,
+                size: size,
+                colors: colors
+            });
+
+            // Keep only last 10 records for clean UI
+            if(historyData.length > 10) historyData.pop();
+
+            // Setup Next Period
+            currentPeriod++;
+            document.getElementById('periodNumber').innerText = currentPeriod;
+            timeLeft = 30;
+            
+            // Update UI
+            renderHistory();
+            freezeOverlay.style.display = 'none';
+            
+            // Restart Loop
+            startTimer();
+        }, 1500); // 1.5 second calculation delay for realism
+    }
+
+    function renderHistory() {
+        const list = document.getElementById('historyList');
+        list.innerHTML = "";
+        
+        historyData.forEach(item => {
+            // Build color circles HTML
+            let colorCircles = '';
+            item.colors.forEach(col => {
+                let bgClass = col === 'red' ? 'bg-red-500' : (col === 'green' ? 'bg-green-500' : 'bg-purple-500');
+                colorCircles += `<div class="w-3 h-3 rounded-full ${bgClass} shadow-sm inline-block mx-[1px]"></div>`;
+            });
+            
+            // Color for Big/Small text
+            let sizeColor = item.size === 'Big' ? 'text-yellow-600' : 'text-blue-500';
+            
+            // Color for Number text
+            let numColorClass = item.colors[0] === 'red' ? 'text-red-500' : 'text-green-500';
+            if (item.num === 0 || item.num === 5) numColorClass = 'text-purple-500';
+
+            list.innerHTML += `
+                <div class="grid grid-cols-4 p-3 text-center items-center text-sm">
+                    <div class="col-span-2 text-left pl-2 font-mono text-gray-600">${item.period}</div>
+                    <div class="font-black text-lg ${numColorClass}">${item.num}</div>
+                    <div>
+                        <span class="font-bold ${sizeColor} mr-2">${item.size}</span>
+                        ${colorCircles}
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // --- BETTING POPUP UI ---
+    let selectedBet = "";
+    function placeBet(type) {
+        if(timeLeft <= 5) return; // Prevent betting if frozen
+        selectedBet = type;
+        document.getElementById('betPopupTitle').innerHTML = `Bet on <span class="text-blue-600">${type}</span>`;
+        document.getElementById('betPopup').style.display = 'flex';
+    }
+
+    function closeBetPopup() {
+        document.getElementById('betPopup').style.display = 'none';
+    }
+
+    function confirmBet() {
+        closeBetPopup();
+        // Custom simple alert
+        alert(`Successfully placed ₹100 bet on ${selectedBet} for period ${currentPeriod}!`);
+    }
+</script>
+</body>
+</html>
 
